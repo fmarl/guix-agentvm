@@ -1,0 +1,46 @@
+;;; config-eglot.el --- Eglot configuration -*- lexical-binding: t; -*-
+
+;; SPDX-FileCopyrightText: 2026 Florian Marrero Liestmann
+;; SPDX-License-Identifier: GPL-3.0-or-later
+
+;;; Code:
+
+(use-package eglot
+  :defer t
+  :init
+  ;; Emacs 31 flymake runs no backend in untrusted buffers unless it is marked
+  ;; safe; eglot's only relays what the language server reports.
+  (put 'eglot-flymake-backend 'flymake-always-safe t)
+  :custom
+  (eglot-sync-connect nil)
+  (eglot-autoshutdown t)
+  (eglot-extend-to-xref t)
+  (eglot-code-action-indicator "*>")
+  (eglot-events-buffer-config '(:size 0))
+  :bind (:map eglot-mode-map
+              ("C-c e a" . eglot-code-actions)
+              ("C-c e r" . eglot-rename))
+  :config
+  (let ((inlay-hints
+         '( :includeInlayParameterNameHints "all"
+            :includeInlayFunctionParameterTypeHints t
+            :includeInlayVariableTypeHints t
+            :includeInlayPropertyDeclarationTypeHints t
+            :includeInlayFunctionLikeReturnTypeHints t
+            :includeInlayEnumMemberValueHints t)))
+    (setq-default
+     eglot-workspace-configuration
+     `( :gopls (:staticcheck t :gofumpt :json-false)
+        :basedpyright (:analysis (:typeCheckingMode "standard"))
+        :nil (:formatting (:command ["nixfmt"]))
+        :typescript (:inlayHints ,inlay-hints)
+        :javascript (:inlayHints ,inlay-hints)))))
+
+(use-package consult-eglot
+  :after eglot
+  :bind (:map eglot-mode-map
+              ("C-c e s" . consult-eglot-symbols)))
+
+(provide 'config-eglot)
+
+;;; config-eglot.el ends here
